@@ -19,7 +19,7 @@ public class AvatarController : MonoBehaviour {
 	// Update is called once per frame
 	void Update () {
 		Move ();
-		checkTargets (3f);
+		//checkTargets (3f);
 	}
 
 	void Move(){
@@ -38,14 +38,14 @@ public class AvatarController : MonoBehaviour {
 	float GetSpeed(){
 		return baseSpeed;
 	}
-
+	/*
 	void checkTargets(float dist){
 		//if there are targets within the dist
 		//alert them.
 		GameObject[] enemies = GameObject.FindGameObjectsWithTag("Enemy");
 		for (int i = 0; i < enemies.Length; i++) {
-			//make this an isAlerted funtion within zombie coltroller
-			if (enemies [i].GetComponent<ZombieController> ().alert == false) {
+			
+			if (enemies [i].GetComponent<ZombieController> ().isAlerted() == false) {
 				if (Vector3.Distance (enemies [i].transform.position, this.transform.position) < dist) {
 					Debug.Log ("alerting");
 					enemies [i].GetComponent<ZombieController> ().Alert (this.gameObject);
@@ -54,7 +54,7 @@ public class AvatarController : MonoBehaviour {
 		}
 
 	}
-
+	*/
 	void OnTriggerEnter2D (Collider2D other){
 		if (other.gameObject.tag == "Hitbox") {
 			HP--;

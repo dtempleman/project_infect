@@ -3,82 +3,128 @@ using System.Collections.Generic;
 using UnityEngine;
 
 public class ZombieController : MonoBehaviour {
-	public GameObject attack;
+	public enum STATE {Idle, Alerted, Hunting};
 
-	bool attacking = false;
-	float attackTimer = 3f;
-	float waitTime;
+	float move_speed;
+	float rotate_speed;
+	bool rotating;
+	bool moving;
+
+	STATE current_state;
+
+	//Vector2 forward;
+
+	Vector2 target;
+	Vector3 home;
+	GameObject pray;
+
 	float timer = 0f;
-	GameObject target;
-	Vector3 idle_target;
-	public bool alert = false;
+
 	Rigidbody2D _rigidbody;
+
 
 	// Use this for initialization
 	void Start () {
+		home = this.transform.position;
+		current_state = STATE.Idle;
+		move_speed = .75f;
+		rotate_speed = 30f;
+
+		timer = 0;
+
+
 		_rigidbody = GetComponent<Rigidbody2D>();
 	}
 	
 	// Update is called once per frame
 	void Update () {
-		attackTimer -= Time.deltaTime;
-		waitTime -= Time.deltaTime;
-		if (alert) {
-			if (!attacking || attackTimer > 0) {
-				follow (target);
+		Look ();
+
+		if (current_state == STATE.Idle) {
+			int max_roam = 3;
+			if (!moving) {
+				target = new Vector2 (home.x + Random.Range (0, max_roam), home.y + Random.Range (0, max_roam));
+				moving = true;
 			} else {
-				_rigidbody.velocity = new Vector3 (0, 0, 0);
-				GameObject a = Instantiate (attack);
-				Vector3 dir = (target.transform.position - this.transform.position);
-				a.transform.position = this.transform.position + dir *.75f;
-				attackTimer = 3f;
-				waitTime = 1;
-				attacking = false;
+				Move (target);
 			}
+
+		} else if (current_state == STATE.Alerted) {
+			// go to alert
+			// once at alert idle
+			Investigate ();
+		} else if (current_state == STATE.Hunting) {
+			follow (pray);
 		} else {
-			idle ();
+			Debug.Log ("Illegal State.");
+			current_state = STATE.Idle;
 		}
+
+		timer -= Time.deltaTime;
+	}
+
+	//will check its field of view for any targets
+	void Look(){
+		// create field of view
+		// if target within FOV
+		// current_state = STATE.Hunting;
+		// target = target;
+
+		Debug.DrawLine (this.transform.position, (this.transform.position + this.transform.up), Color.red);
+
 	}
 
 	void follow(GameObject target){
 		if(Vector3.Distance(target.transform.position, this.transform.position) > 6f){
-			alert = false;
+			//alerted = false;
 			//Debug.Log ("you got away");
 		}else if(Vector3.Distance(target.transform.position, this.transform.position) < 1f){
-			attacking = true;
-		}else if(waitTime<0){
+			//attacking = true;
+		//}else if(waitTime<0){
 			Move (target.transform.position);
 
 		}
 		//Debug.Log("moving");
 	}
 
-	void idle(){
-		if (timer <= 0f) {
-			float x_rand = Random.Range (-5, 5)/10f;
-			float y_rand = Random.Range (-5, 5)/10f;
-			idle_target = new Vector3(x_rand + this.transform.position.x, y_rand + this.transform.position.y, 0);
-			timer = Random.Range (3, 5);
-			//Debug.Log ("new idle pos "+ idle_target);
-		}if (Mathf.Abs(this.transform.position.x - idle_target.x) < .01f && Mathf.Abs(this.transform.position.y - idle_target.y) < .1f){
-			_rigidbody.velocity = new Vector3 (0, 0, 0);
-			timer -= Time.deltaTime;
-		}else {
-			Move (idle_target);
+	void Move(Vector3 target){
+		if(Mathf.Abs(this.transform.position.x - home.x) < .01f && Mathf.Abs(this.transform.position.y - home.y) < .01f){
+			moving = false;
+		}else if(true){
+			transform.Translate (Vector2.up * move_speed * Time.deltaTime);
+		}else{
+
 		}
+
+
+		//Vector3 newVel = (target - transform.position).normalized*move_speed;
+		//_rigidbody.velocity = newVel;
+
+		//if facing target
+			// move forward
+		//else
+			//rotate to target
+
+
+	}
+		
+	public void Alert(Vector2 target){
+		target = target;
+		current_state = STATE.Alerted;
+		Debug.Log ("allerted to: " + target);
+	}
+		
+	public bool isAlerted(){
+		return false;
 	}
 
-	void Move(Vector3 target){
-		float speed = .75f;
-		Vector3 newVel = (target - transform.position).normalized*speed;
-		_rigidbody.velocity = newVel;
+	void Investigate(){
+		if (Mathf.Abs(this.transform.position.x - home.x) < .5f && Mathf.Abs(this.transform.position.y - home.y) < .5f){
+			_rigidbody.velocity = new Vector3 (0, 0, 0);
+			timer -= Time.deltaTime;
+			current_state = STATE.Idle;
+		}else {
+			Move (home);
+		}
 	}
-		
-	public void Alert(GameObject target){
-		this.target = target;
-		alert = true;
-		timer = 0f;
-		//Debug.Log ("alerted");
-	}
-		
 }
